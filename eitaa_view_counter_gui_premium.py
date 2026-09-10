@@ -252,19 +252,6 @@ class EitaaGUI(tk.Tk):
         self.idle_stop_entry = ttk.Entry(opts, textvariable=self.idle_stop_var, width=7)
         self.idle_stop_entry.pack(side="right")
 
-        dates = tk.Frame(card, bg=self.CARD)
-        dates.pack(fill="x", padx=16, pady=7)
-        self._label(dates, "از تاریخ").pack(side="right", padx=4)
-        self.start_date_var = tk.StringVar()
-        ttk.Entry(dates, textvariable=self.start_date_var, width=13).pack(side="right", padx=4)
-        self._label(dates, "تا تاریخ").pack(side="right", padx=(12, 4))
-        self.end_date_var = tk.StringVar()
-        ttk.Entry(dates, textvariable=self.end_date_var, width=13).pack(side="right", padx=4)
-
-        self._label(dates, "مکث روی بازدید نامشخص").pack(side="right", padx=(12, 4))
-        self.stuck_give_up_var = tk.StringVar(value="25")
-        ttk.Entry(dates, textvariable=self.stuck_give_up_var, width=7).pack(side="right", padx=4)
-
         btns = tk.Frame(card, bg=self.CARD)
         btns.pack(fill="x", padx=16, pady=(5, 14))
         self.manual_open_btn = ttk.Button(btns, text="🌐 باز کردن مرورگر", command=self.on_manual_open)
@@ -507,20 +494,10 @@ class EitaaGUI(tk.Tk):
         try:
             scroll_step = int(self.scroll_step_var.get())
             idle_stop_seconds = float(self.idle_stop_var.get())
-            stuck_give_up_seconds = float(self.stuck_give_up_var.get())
-            if scroll_step < 50 or idle_stop_seconds < 0 or stuck_give_up_seconds < 0:
+            if scroll_step < 50 or idle_stop_seconds < 0:
                 raise ValueError
         except ValueError:
             messagebox.showwarning("خطا", "مقادیر اسکرول و زمان‌ها را بررسی کنید.")
-            return
-
-        start_date = self.start_date_var.get().strip() or None
-        end_date = self.end_date_var.get().strip() or None
-        if start_date and core.parse_display_date_key(start_date) is None:
-            messagebox.showwarning("خطا", "فرمت تاریخ شروع صحیح نیست؛ مثال: 1405/2/1")
-            return
-        if end_date and core.parse_display_date_key(end_date) is None:
-            messagebox.showwarning("خطا", "فرمت تاریخ پایان صحیح نیست؛ مثال: 1405/2/1")
             return
 
         use_login = Path(core.STORAGE_STATE).exists()
@@ -532,10 +509,7 @@ class EitaaGUI(tk.Tk):
             channel, use_login=use_login, log_fn=self._log,
             auto_scroll=self.auto_scroll_var.get(),
             scroll_step=scroll_step,
-            idle_stop_seconds=idle_stop_seconds,
-            end_date=end_date,
-            start_date=start_date,
-            stuck_give_up_seconds=stuck_give_up_seconds
+            idle_stop_seconds=idle_stop_seconds
         )
         self.session.start()
         self.worker_running = True
