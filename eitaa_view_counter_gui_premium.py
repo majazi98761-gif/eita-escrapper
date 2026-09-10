@@ -177,7 +177,7 @@ class EitaaGUI(tk.Tk):
         card.pack(fill="x", pady=(0, 10))
         title = tk.Frame(card, bg=self.CARD)
         title.pack(fill="x", padx=16, pady=(13, 5))
-        tk.Label(title, text="مشخصات و ورودی", bg=self.CARD, fg=self.TEXT,
+        tk.Label(title, text="کانال و تنظیمات", bg=self.CARD, fg=self.TEXT,
                  font=("Segoe UI", 11, "bold")).pack(anchor="e")
 
         grid = tk.Frame(card, bg=self.CARD)
@@ -195,8 +195,6 @@ class EitaaGUI(tk.Tk):
                         value="manual", command=self._toggle_mode).pack(side="right", padx=5)
         ttk.Radiobutton(modes, text="بازه شماره پست", variable=self.mode_var,
                         value="range", command=self._toggle_mode).pack(side="right", padx=5)
-        ttk.Radiobutton(modes, text="فایل لینک‌ها", variable=self.mode_var,
-                        value="file", command=self._toggle_mode).pack(side="right", padx=5)
 
         self.range_frame = tk.Frame(grid, bg=self.CARD)
         self.range_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=4)
@@ -207,19 +205,13 @@ class EitaaGUI(tk.Tk):
         self.end_id_var = tk.StringVar()
         ttk.Entry(self.range_frame, textvariable=self.end_id_var, width=10).pack(side="right", padx=4)
 
-        self.file_frame = tk.Frame(grid, bg=self.CARD)
-        self.file_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=4)
-        self.ids_file_var = tk.StringVar()
-        ttk.Entry(self.file_frame, textvariable=self.ids_file_var, width=30).pack(side="right", fill="x", expand=True, padx=4)
-        ttk.Button(self.file_frame, text="انتخاب فایل", command=self.on_browse_ids_file).pack(side="right", padx=4)
-
-        self._label(grid, "تأخیر بین پست‌ها (ثانیه)").grid(row=4, column=1, sticky="e", padx=5, pady=5)
+        self._label(grid, "تأخیر بین پست‌ها (ثانیه)").grid(row=3, column=1, sticky="e", padx=5, pady=5)
         self.delay_var = tk.StringVar(value="1.5")
-        ttk.Entry(grid, textvariable=self.delay_var, width=10).grid(row=4, column=0, sticky="e", padx=5, pady=5)
+        ttk.Entry(grid, textvariable=self.delay_var, width=10).grid(row=3, column=0, sticky="e", padx=5, pady=5)
 
-        self._label(grid, "فایل خروجی CSV").grid(row=5, column=1, sticky="e", padx=5, pady=5)
+        self._label(grid, "فایل خروجی CSV").grid(row=4, column=1, sticky="e", padx=5, pady=5)
         out = tk.Frame(grid, bg=self.CARD)
-        out.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
+        out.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
         self.out_var = tk.StringVar(value=str(Path.cwd() / "eitaa_views.csv"))
         ttk.Entry(out, textvariable=self.out_var).pack(side="right", fill="x", expand=True)
         ttk.Button(out, text="...", width=3, command=self.on_browse_out).pack(side="right", padx=(5, 0))
@@ -367,13 +359,8 @@ class EitaaGUI(tk.Tk):
         mode = self.mode_var.get()
         if mode == "range":
             self.range_frame.grid()
-            self.file_frame.grid_remove()
-        elif mode == "file":
-            self.file_frame.grid()
-            self.range_frame.grid_remove()
         else:
             self.range_frame.grid_remove()
-            self.file_frame.grid_remove()
 
         if self.worker_running or self.session is not None:
             return
@@ -390,14 +377,6 @@ class EitaaGUI(tk.Tk):
             self.login_status_lbl.config(text="● سشن آماده", fg=self.SUCCESS)
         else:
             self.login_status_lbl.config(text="● بدون سشن", fg=self.MUTED)
-
-    def on_browse_ids_file(self):
-        path = filedialog.askopenfilename(
-            title="انتخاب فایل لیست لینک‌ها/شماره پست‌ها",
-            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
-        )
-        if path:
-            self.ids_file_var.set(path)
 
     def on_browse_out(self):
         path = filedialog.asksaveasfilename(
@@ -474,18 +453,8 @@ class EitaaGUI(tk.Tk):
                 return
             post_ids = list(range(start_id, end_id + 1))
         else:
-            ids_file = self.ids_file_var.get().strip()
-            if not ids_file or not Path(ids_file).exists():
-                messagebox.showwarning("خطا", "فایل لیست را انتخاب کنید.")
-                return
-            with open(ids_file, encoding="utf-8") as f:
-                for line in f:
-                    m = re.search(r"(\d+)\s*$", line.strip())
-                    if m:
-                        post_ids.append(int(m.group(1)))
-            if not post_ids:
-                messagebox.showwarning("خطا", "هیچ شماره پستی از فایل استخراج نشد.")
-                return
+            messagebox.showwarning("خطا", "حالت دستی فقط برای اسکرول دستی است. برای استخراج خودکار، حالت بازه شماره پست را انتخاب کنید.")
+            return
 
         out_path = self.out_var.get().strip() or "eitaa_views.csv"
         use_login = Path(core.STORAGE_STATE).exists()
